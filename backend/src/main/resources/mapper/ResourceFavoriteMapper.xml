@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teaching.mapper.ResourceFavoriteMapper">
+
+    <select id="selectFavoritePage" resultType="com.teaching.entity.ResourceFavorite">
+        SELECT f.*, r.title AS resource_title
+        FROM resource_favorite f
+        LEFT JOIN teaching_resource r ON f.resource_id = r.id
+        WHERE f.user_id = #{userId}
+        ORDER BY f.create_time DESC
+    </select>
+
+</mapper>

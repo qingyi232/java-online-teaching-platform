@@ -1,0 +1,474 @@
+==============================================================================
+    基于Java的线上教学资源平台 —— 部署启动文档（完整版）
+==============================================================================
+
+
+
+目录：
+  一、环境要求总览
+  二、安装 JDK 17
+  三、安装 Maven
+  四、安装 Node.js
+  五、安装 MySQL 8.0
+  六、安装 Redis
+  七、安装 MinIO
+  八、初始化数据库
+  九、启动后端（Spring Boot）
+  十、启动前端（Vue.js）
+  十一、访问系统
+  十二、默认账号
+  十三、常见问题排查
+
+
+==============================================================================
+一、环境要求总览
+==============================================================================
+
+  软件名称        版本要求        用途              默认端口
+  ─────────────  ──────────────  ────────────────  ────────
+  JDK            17+             后端Java运行环境    -
+  Maven          3.6+            后端依赖管理        -
+  Node.js        14~18           前端构建工具        -
+  MySQL          8.0+            关系型数据库        3306
+  Redis          任意版本         缓存服务           6379
+  MinIO          最新版           文件对象存储        9000/9001
+
+  操作系统：Windows 10/11（本文档以Windows为例）
+
+
+==============================================================================
+二、安装 JDK 17
+==============================================================================
+
+1. 下载地址（华为镜像，国内直连）：
+   https://repo.huaweicloud.com/java/jdk/17.0.2+8/jdk-17.0.2_windows-x64_bin.exe
+
+   备用地址（清华镜像）：
+   https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/windows/
+
+2. 双击安装包，一路点"下一步"即可，建议安装到默认路径：
+   C:\Program Files\Java\jdk-17
+
+3. 配置环境变量：
+   a. 右键"此电脑" → 属性 → 高级系统设置 → 环境变量
+   b. 在"系统变量"中新建：
+      变量名：JAVA_HOME
+      变量值：C:\Program Files\Java\jdk-17
+   c. 找到"系统变量"中的 Path，双击编辑，新增一行：
+      %JAVA_HOME%\bin
+   d. 点确定保存
+
+4. 验证安装：
+   打开 cmd（按 Win+R，输入 cmd，回车），输入：
+   java -version
+
+   看到类似以下输出即成功：
+   java version "17.0.2" 2022-01-18 LTS
+
+
+==============================================================================
+三、安装 Maven
+==============================================================================
+
+1. 下载地址（阿里云镜像）：
+   https://mirrors.aliyun.com/apache/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip
+
+   备用地址（华为镜像）：
+   https://repo.huaweicloud.com/apache/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip
+
+2. 解压到任意目录，例如：
+   C:\apache-maven-3.9.6
+
+3. 配置环境变量：
+   a. 新建系统变量：
+      变量名：MAVEN_HOME
+      变量值：C:\apache-maven-3.9.6
+   b. 编辑 Path，新增一行：
+      %MAVEN_HOME%\bin
+
+4. 配置国内镜像（重要！否则下载依赖极慢）：
+   打开文件：C:\apache-maven-3.9.6\conf\settings.xml
+   找到 <mirrors> 标签，在其中添加：
+
+   <mirror>
+     <id>aliyunmaven</id>
+     <mirrorOf>*</mirrorOf>
+     <name>阿里云公共仓库</name>
+     <url>https://maven.aliyun.com/repository/public</url>
+   </mirror>
+
+5. 验证安装：
+   打开新的 cmd 窗口，输入：
+   mvn -version
+
+   看到 Apache Maven 3.9.6 即成功。
+
+
+==============================================================================
+四、安装 Node.js
+==============================================================================
+
+1. 下载地址（国内镜像）：
+   https://npmmirror.com/mirrors/node/v16.20.2/node-v16.20.2-x64.msi
+
+   备用地址（清华镜像）：
+   https://mirrors.tuna.tsinghua.edu.cn/nodejs-release/v16.20.2/node-v16.20.2-x64.msi
+
+   注意：请下载 v16 版本，与项目兼容性最好。不要下载 v20+。
+
+2. 双击安装包，一路"Next"即可，会自动配置环境变量。
+
+3. 配置 npm 国内镜像（重要！否则安装依赖极慢）：
+   打开 cmd，执行：
+   npm config set registry https://registry.npmmirror.com
+
+4. 验证安装：
+   node -v      （应显示 v16.20.2）
+   npm -v       （应显示 8.x.x）
+   npm config get registry  （应显示 https://registry.npmmirror.com）
+
+
+==============================================================================
+五、安装 MySQL 8.0
+==============================================================================
+
+1. 下载地址（国内镜像）：
+   https://mirrors.tuna.tsinghua.edu.cn/mysql/downloads/MySQL-8.0/mysql-8.0.36-winx64.zip
+
+   或者使用安装版（更简单）：
+   https://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-installer-community-8.0.36.0.msi
+
+2. 安装版安装步骤：
+   a. 双击 msi 安装包
+   b. 选择 "Developer Default" 或 "Server only"
+   c. 一路 Next
+   d. 设置 root 密码为：root （与项目配置一致）
+   e. 完成安装
+
+3. 压缩版安装步骤（如果下载的是 zip）：
+   a. 解压到 C:\mysql-8.0.36
+   b. 在该目录下创建 my.ini 文件，内容：
+
+      [mysqld]
+      basedir=C:/mysql-8.0.36
+      datadir=C:/mysql-8.0.36/data
+      port=3306
+      character-set-server=utf8mb4
+
+   c. 以管理员身份打开 cmd，执行：
+      cd C:\mysql-8.0.36\bin
+      mysqld --initialize-insecure --user=mysql
+      mysqld --install
+      net start mysql
+
+   d. 设置 root 密码：
+      mysql -u root --skip-password
+      ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';
+      FLUSH PRIVILEGES;
+      EXIT;
+
+4. 验证安装：
+   mysql -u root -p
+   输入密码：root
+   看到 mysql> 提示符即成功，输入 exit 退出。
+
+   ★★★ 重要提示 ★★★
+   如果你的 MySQL root 密码不是 "root"，需要修改后端配置文件：
+   backend/src/main/resources/application.yml
+   将第 9 行的 password: root 改为你的实际密码。
+
+
+==============================================================================
+六、安装 Redis
+==============================================================================
+
+1. 下载地址（Windows版，GitHub国内加速）：
+   https://ghproxy.com/https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.msi
+
+   备用地址（直接下载zip版）：
+   https://ghproxy.com/https://github.com/tporadowski/redis/releases/download/v5.0.14.1/Redis-x64-5.0.14.1.zip
+
+   如果以上链接失效，百度搜索 "Redis Windows 下载" 即可找到。
+
+2. 安装版：双击 msi，一路 Next，勾选"Add to PATH"。安装完会自动启动。
+
+3. 压缩版：
+   a. 解压到 C:\Redis
+   b. 双击 redis-server.exe 启动（会弹出一个黑色窗口，不要关闭）
+
+4. 验证安装：
+   打开新的 cmd，输入：
+   redis-cli ping
+
+   返回 PONG 即成功。
+
+   ★ 注意：Redis 窗口在运行期间不能关闭！
+   如果安装的是 msi 版本，Redis 会作为 Windows 服务自动运行，无需手动启动。
+
+
+==============================================================================
+七、安装 MinIO
+==============================================================================
+
+1. 下载地址（官方直链，国内可访问）：
+   https://dl.min.io/server/minio/release/windows-amd64/minio.exe
+
+2. 将下载的 minio.exe 放到一个目录，例如：
+   C:\minio\minio.exe
+
+3. 创建数据存储目录：
+   C:\minio\data
+
+4. 启动 MinIO：
+   打开 cmd，执行：
+   cd C:\minio
+   minio.exe server C:\minio\data --console-address ":9001"
+
+   看到以下输出即成功：
+   API: http://localhost:9000
+   Console: http://localhost:9001
+
+   ★ 注意：这个 cmd 窗口在运行期间不能关闭！
+
+5. 创建存储桶：
+   a. 打开浏览器，访问：http://localhost:9001
+   b. 登录账号：minioadmin  密码：minioadmin
+   c. 点击左侧 "Buckets" → 右上角 "Create Bucket"
+   d. 输入桶名称：teaching-platform
+   e. 点击 "Create Bucket" 创建
+   f. 点击刚创建的 teaching-platform 桶 → "Access Policy" 改为 "Public"
+      （这样上传的文件才能被下载）
+
+
+==============================================================================
+八、初始化数据库
+==============================================================================
+
+1. 打开 cmd，连接 MySQL：
+   mysql -u root -p
+   输入密码：root
+
+2. 执行初始化脚本（创建数据库和表）：
+   source 项目路径/sql/init.sql
+
+   例如：
+   source F:/26毕设2/基于Java的线上教学资源平台的设计与实现/sql/init.sql
+
+   看到 Query OK 即成功。
+
+3. 导入演示数据（可选，推荐执行，这样系统里有示例数据）：
+   source F:/26毕设2/基于Java的线上教学资源平台的设计与实现/sql/demo_data.sql
+
+4. 执行修复脚本：
+   source F:/26毕设2/基于Java的线上教学资源平台的设计与实现/sql/fix_names.sql
+   source F:/26毕设2/基于Java的线上教学资源平台的设计与实现/sql/fix_users.sql
+
+5. 验证数据库：
+   USE teaching_platform;
+   SHOW TABLES;
+
+   应看到 9 张表：
+   sys_user, resource_category, teaching_resource, resource_comment,
+   resource_favorite, question_answer, qa_reply,
+   resource_view_log, resource_download_log
+
+6. 输入 exit 退出 MySQL。
+
+   ★★★ 注意路径 ★★★
+   上面的路径请替换为你电脑上项目的实际路径！
+   路径中使用正斜杠 / 而不是反斜杠 \
+
+
+==============================================================================
+九、启动后端（Spring Boot）
+==============================================================================
+
+  ★★★ 启动前请确保 MySQL、Redis、MinIO 都已启动！★★★
+
+---------- 方式一：使用 IntelliJ IDEA 启动（推荐）----------
+
+1. 打开 IDEA，选择 "Open"，选择项目中的 backend 文件夹打开。
+   例如：F:\26毕设2\基于Java的线上教学资源平台的设计与实现\backend
+
+2. 等待 IDEA 自动识别 Maven 项目并下载依赖（右下角会显示进度条）。
+   首次打开可能需要几分钟，取决于网速。
+
+   如果 IDEA 没有自动下载依赖：
+   a. 右键点击 pom.xml → Maven → Reload Project
+   b. 或者点击右侧 Maven 面板的刷新按钮
+
+3. 配置 JDK（如果 IDEA 提示）：
+   a. File → Project Structure → Project
+   b. SDK 选择已安装的 JDK 17
+   c. Language level 选择 17
+   d. 点 OK 保存
+
+4. 找到启动类并运行：
+   a. 在左侧项目目录中展开：
+      src/main/java/com/teaching/TeachingPlatformApplication.java
+   b. 右键点击该文件 → Run 'TeachingPlatformApplication'
+   c. 或者直接点击类名左边的绿色三角形 ▶ 按钮
+
+5. 看到控制台输出以下内容即启动成功：
+   Started TeachingPlatformApplication in x.xxx seconds
+
+   后端运行在：http://localhost:8088
+
+6. 停止后端：点击 IDEA 控制台左侧的红色方块 ■ 按钮。
+
+   ★ IDEA 启动的好处：
+   - 可以直接调试代码（打断点）
+   - 修改代码后自动编译，无需手动重启
+   - 控制台日志有颜色高亮，更容易排查问题
+
+
+---------- 方式二：使用命令行启动 ----------
+
+1. 打开 cmd，进入后端目录：
+   cd 项目路径\backend
+
+   例如：
+   cd F:\26毕设2\基于Java的线上教学资源平台的设计与实现\backend
+
+2. 首次运行需要下载依赖（可能需要几分钟，取决于网速）：
+   mvn spring-boot:run
+
+3. 看到以下输出即启动成功：
+   Started TeachingPlatformApplication in x.xxx seconds
+
+   后端运行在：http://localhost:8088
+
+   ★ 注意：这个 cmd 窗口在运行期间不能关闭！
+
+
+---------- 验证后端是否正常 ----------
+
+打开浏览器访问：http://localhost:8088/api/resource/category/list
+看到 JSON 数据（包含课件、视频、文档等分类）即成功。
+
+如果报错，请检查：
+- MySQL 是否启动？密码是否正确？
+- Redis 是否启动？
+- MinIO 是否启动？
+
+
+==============================================================================
+十、启动前端（Vue.js）
+==============================================================================
+
+1. 打开一个新的 cmd 窗口（不要关闭后端的窗口），进入前端目录：
+   cd 项目路径\frontend
+
+   例如：
+   cd F:\26毕设2\基于Java的线上教学资源平台的设计与实现\frontend
+
+2. 首次运行需要安装依赖（可能需要几分钟）：
+   npm install
+
+   如果报错，尝试：
+   npm install --legacy-peer-deps
+
+3. 启动前端开发服务器：
+   npm run serve
+
+4. 看到以下输出即启动成功：
+   App running at:
+   - Local:   http://localhost:8080/
+
+   前端运行在：http://localhost:8080
+
+   ★ 注意：这个 cmd 窗口在运行期间不能关闭！
+
+
+==============================================================================
+十一、访问系统
+==============================================================================
+
+打开浏览器（推荐 Chrome），访问：
+
+  http://localhost:8080
+
+即可看到线上教学资源平台的首页。
+
+
+==============================================================================
+十二、默认账号
+==============================================================================
+
+  角色      用户名      密码
+  ────────  ──────────  ──────────
+  管理员    admin       admin123
+  教师      teacher     admin123
+  学生      student     admin123
+
+  不同角色登录后看到的界面不同：
+  - 管理员：管理控制台（用户管理、资源审核、分类管理、数据统计）
+  - 教师：教师工作台（上传资源、资源审核、答疑中心、数据统计）
+  - 学生：门户首页（浏览资源、下载资源、收藏、问答）
+
+
+==============================================================================
+十三、常见问题排查
+==============================================================================
+
+问题1：后端启动报 "Communications link failure"
+  原因：MySQL 未启动或密码不对
+  解决：
+  a. 确认 MySQL 已启动：打开 cmd 输入 mysql -u root -p 能否连接
+  b. 检查 backend/src/main/resources/application.yml 中的数据库密码
+
+问题2：后端启动报 "Connection refused: localhost:6379"
+  原因：Redis 未启动
+  解决：启动 Redis（双击 redis-server.exe 或检查 Redis 服务是否运行）
+
+问题3：前端 npm install 报错
+  原因：Node.js 版本不兼容或网络问题
+  解决：
+  a. 确认 Node.js 版本为 v14~v18（node -v 查看）
+  b. 确认已配置国内镜像：npm config get registry
+  c. 尝试：npm install --legacy-peer-deps
+  d. 如果还不行，删除 node_modules 文件夹后重试
+
+问题4：前端页面打开空白
+  原因：后端未启动或端口不对
+  解决：确认后端在 8088 端口运行，前端在 8080 端口运行
+
+问题5：上传文件失败
+  原因：MinIO 未启动或存储桶未创建
+  解决：
+  a. 确认 MinIO 已启动（访问 http://localhost:9001 能打开）
+  b. 确认已创建名为 teaching-platform 的存储桶
+  c. 确认存储桶的 Access Policy 设置为 Public
+
+问题6：统计图表没有数据
+  原因：没有导入演示数据
+  解决：执行 sql/demo_data.sql 导入演示数据，或在系统中进行浏览、下载操作产生真实数据
+
+问题7：mvn 命令找不到
+  原因：Maven 环境变量未配置
+  解决：重新配置 MAVEN_HOME 和 Path，然后打开新的 cmd 窗口
+
+问题8：端口被占用
+  原因：之前的程序没有正确关闭
+  解决：
+  a. 查看占用端口的进程：netstat -ano | findstr :8088
+  b. 杀掉进程：taskkill /PID 进程号 /F
+
+
+==============================================================================
+  启动顺序总结（每次运行项目都按这个顺序）
+==============================================================================
+
+  1. 启动 MySQL      （如果是服务则自动启动，无需操作）
+  2. 启动 Redis       （如果是服务则自动启动，无需操作）
+  3. 启动 MinIO       （cmd 中运行 minio.exe server ...）
+  4. 启动后端         （cmd 中进入 backend 目录，运行 mvn spring-boot:run）
+  5. 启动前端         （新 cmd 中进入 frontend 目录，运行 npm run serve）
+  6. 打开浏览器       （访问 http://localhost:8080）
+
+  关闭顺序：在各个 cmd 窗口中按 Ctrl+C 即可停止。
+
+
+==============================================================================
+  文档结束
+==============================================================================

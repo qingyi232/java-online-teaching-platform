@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teaching.mapper.ResourceViewLogMapper">
+
+    <select id="countViewsByDate" resultType="java.util.Map">
+        SELECT DATE(create_time) AS date, COUNT(*) AS count
+        FROM resource_view_log
+        WHERE create_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(create_time)
+        ORDER BY date ASC
+    </select>
+
+    <select id="countViewsByCategory" resultType="java.util.Map">
+        SELECT c.name AS category_name, COUNT(v.id) AS count
+        FROM resource_view_log v
+        LEFT JOIN teaching_resource r ON v.resource_id = r.id
+        LEFT JOIN resource_category c ON r.category_id = c.id
+        GROUP BY c.name
+    </select>
+
+    <select id="countTotalViews" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM resource_view_log
+    </select>
+
+</mapper>

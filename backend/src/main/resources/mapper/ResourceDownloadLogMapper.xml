@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teaching.mapper.ResourceDownloadLogMapper">
+
+    <select id="countDownloadsByDate" resultType="java.util.Map">
+        SELECT DATE(create_time) AS date, COUNT(*) AS count
+        FROM resource_download_log
+        WHERE create_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(create_time)
+        ORDER BY date ASC
+    </select>
+
+    <select id="topDownloadResources" resultType="java.util.Map">
+        SELECT r.title, COUNT(d.id) AS download_count
+        FROM resource_download_log d
+        LEFT JOIN teaching_resource r ON d.resource_id = r.id
+        GROUP BY r.title
+        ORDER BY download_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countTotalDownloads" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM resource_download_log
+    </select>
+
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.teaching.mapper.TeachingResourceMapper">
+
+    <select id="selectResourcePage" resultType="com.teaching.entity.TeachingResource">
+        SELECT r.*, u.real_name AS upload_user_name, c.name AS category_name
+        FROM teaching_resource r
+        LEFT JOIN sys_user u ON r.upload_user_id = u.id
+        LEFT JOIN resource_category c ON r.category_id = c.id
+        <where>
+            <if test="title != null and title != ''">
+                AND r.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND r.category_id = #{categoryId}
+            </if>
+            <if test="fileType != null and fileType != ''">
+                AND r.file_type = #{fileType}
+            </if>
+            <if test="status != null">
+                AND r.status = #{status}
+            </if>
+            <if test="uploadUserId != null">
+                AND r.upload_user_id = #{uploadUserId}
+            </if>
+        </where>
+        ORDER BY r.create_time DESC
+    </select>
+
+    <select id="selectResourceDetail" resultType="com.teaching.entity.TeachingResource">
+        SELECT r.*, u.real_name AS upload_user_name, c.name AS category_name
+        FROM teaching_resource r
+        LEFT JOIN sys_user u ON r.upload_user_id = u.id
+        LEFT JOIN resource_category c ON r.category_id = c.id
+        WHERE r.id = #{id}
+    </select>
+
+</mapper>

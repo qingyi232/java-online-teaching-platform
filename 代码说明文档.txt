@@ -1,0 +1,424 @@
+==============================================================================
+    基于Java的线上教学资源平台 —— 代码说明文档
+==============================================================================
+
+
+目录：
+  一、项目概述
+  二、技术栈
+  三、项目目录结构
+  四、后端代码结构说明
+  五、前端代码结构说明
+  六、数据库设计说明
+  七、核心功能模块说明
+  八、接口清单
+  九、配置文件说明
+
+
+==============================================================================
+一、项目概述
+==============================================================================
+
+项目名称：基于Java的线上教学资源平台
+项目类型：B/S架构 Web应用
+开发模式：前后端分离
+
+系统角色：
+  - 管理员（ADMIN）：用户管理、资源审核、分类管理、数据统计
+  - 教师（TEACHER）：上传资源、资源审核、答疑、数据统计
+  - 学生（STUDENT）：浏览资源、下载资源、收藏、评论、问答
+
+核心功能：
+  1. 用户与权限管理（注册、登录、JWT认证、角色权限控制）
+  2. 教学资源管理（上传、审核、检索、下载、分类管理）
+  3. 师生互动（资源评论、问答中心、资源收藏）
+  4. 数据统计分析（仪表盘、趋势图表、分类分布、热门排行）
+
+
+==============================================================================
+二、技术栈
+==============================================================================
+
+后端：
+  - Java 17
+  - Spring Boot 2.7.18
+  - MyBatis-Plus 3.5.3（ORM框架）
+  - MySQL 8.0（关系型数据库）
+  - Redis（缓存）
+  - MinIO 8.5.7（对象存储，存储上传的文件）
+  - JWT 0.9.1（用户认证令牌）
+  - Hutool 5.8.22（工具库，BCrypt密码加密）
+  - Lombok（简化代码）
+  - Maven（依赖管理）
+
+前端：
+  - Vue.js 2.6（前端框架）
+  - Vue Router 3.5（路由管理）
+  - Vuex 3.6（状态管理）
+  - Element UI 2.15（UI组件库）
+  - Axios 0.27（HTTP请求库）
+  - ECharts 5.4（图表库）
+  - npm（包管理）
+
+
+==============================================================================
+三、项目目录结构
+==============================================================================
+
+项目根目录/
+├── backend/                          # 后端 Spring Boot 项目
+│   ├── pom.xml                       # Maven 依赖配置
+│   └── src/main/
+│       ├── java/com/teaching/
+│       │   ├── TeachingPlatformApplication.java  # 启动类
+│       │   ├── common/               # 公共模块
+│       │   │   ├── Result.java       # 统一响应封装
+│       │   │   ├── BusinessException.java  # 业务异常
+│       │   │   ├── GlobalExceptionHandler.java  # 全局异常处理
+│       │   │   ├── JwtUtils.java     # JWT工具类
+│       │   │   ├── Constants.java    # 常量定义
+│       │   │   └── MyMetaObjectHandler.java  # 自动填充时间
+│       │   ├── config/               # 配置类
+│       │   │   ├── CorsConfig.java   # 跨域配置
+│       │   │   ├── MinioConfig.java  # MinIO配置
+│       │   │   ├── MybatisPlusConfig.java  # 分页插件配置
+│       │   │   ├── RedisConfig.java  # Redis序列化配置
+│       │   │   └── WebMvcConfig.java # 拦截器注册
+│       │   ├── interceptor/
+│       │   │   └── AuthInterceptor.java  # JWT认证拦截器
+│       │   ├── entity/               # 实体类（对应数据库表）
+│       │   │   ├── SysUser.java
+│       │   │   ├── TeachingResource.java
+│       │   │   ├── ResourceCategory.java
+│       │   │   ├── ResourceComment.java
+│       │   │   ├── ResourceFavorite.java
+│       │   │   ├── QuestionAnswer.java
+│       │   │   ├── QaReply.java
+│       │   │   ├── ResourceViewLog.java
+│       │   │   └── ResourceDownloadLog.java
+│       │   ├── mapper/               # 数据访问层接口
+│       │   │   ├── SysUserMapper.java
+│       │   │   ├── TeachingResourceMapper.java
+│       │   │   ├── ResourceCategoryMapper.java
+│       │   │   ├── ResourceCommentMapper.java
+│       │   │   ├── ResourceFavoriteMapper.java
+│       │   │   ├── QuestionAnswerMapper.java
+│       │   │   ├── QaReplyMapper.java
+│       │   │   ├── ResourceViewLogMapper.java
+│       │   │   └── ResourceDownloadLogMapper.java
+│       │   ├── service/              # 业务逻辑层接口
+│       │   │   ├── AuthService.java
+│       │   │   ├── UserService.java
+│       │   │   ├── ResourceService.java
+│       │   │   ├── CategoryService.java
+│       │   │   ├── CommentService.java
+│       │   │   ├── FavoriteService.java
+│       │   │   ├── QuestionService.java
+│       │   │   ├── StatisticsService.java
+│       │   │   ├── MinioService.java
+│       │   │   └── impl/            # 业务逻辑层实现
+│       │   │       ├── AuthServiceImpl.java
+│       │   │       ├── UserServiceImpl.java
+│       │   │       ├── ResourceServiceImpl.java
+│       │   │       ├── CategoryServiceImpl.java
+│       │   │       ├── CommentServiceImpl.java
+│       │   │       ├── FavoriteServiceImpl.java
+│       │   │       ├── QuestionServiceImpl.java
+│       │   │       ├── StatisticsServiceImpl.java
+│       │   │       └── MinioServiceImpl.java
+│       │   └── controller/          # 控制器层（API接口）
+│       │       ├── AuthController.java
+│       │       ├── UserController.java
+│       │       ├── ResourceController.java
+│       │       ├── CategoryController.java
+│       │       ├── CommentController.java
+│       │       ├── FavoriteController.java
+│       │       ├── QuestionController.java
+│       │       └── StatisticsController.java
+│       └── resources/
+│           ├── application.yml       # 应用配置文件
+│           └── mapper/               # MyBatis XML映射文件
+│               ├── TeachingResourceMapper.xml
+│               ├── ResourceViewLogMapper.xml
+│               ├── ResourceDownloadLogMapper.xml
+│               ├── ResourceCommentMapper.xml
+│               ├── ResourceFavoriteMapper.xml
+│               ├── QuestionAnswerMapper.xml
+│               └── QaReplyMapper.xml
+│
+├── frontend/                         # 前端 Vue.js 项目
+│   ├── package.json                  # npm 依赖配置
+│   ├── vue.config.js                 # Vue CLI 配置（代理、端口）
+│   └── src/
+│       ├── main.js                   # 入口文件
+│       ├── api/                      # API 接口定义
+│       │   ├── auth.js               # 登录注册接口
+│       │   ├── user.js               # 用户管理接口
+│       │   ├── resource.js           # 资源管理+分类接口
+│       │   ├── interaction.js        # 评论+收藏+问答接口
+│       │   └── statistics.js         # 统计接口
+│       ├── router/
+│       │   └── index.js              # 路由配置（含权限守卫）
+│       ├── store/
+│       │   └── index.js              # Vuex状态管理
+│       ├── utils/
+│       │   └── request.js            # Axios封装（拦截器、Token）
+│       └── views/                    # 页面组件
+│           ├── Login.vue             # 登录页
+│           ├── Register.vue          # 注册页
+│           ├── Home.vue              # 首页（三种角色不同视图）
+│           ├── Layout.vue            # 布局框架（侧边栏/顶栏）
+│           ├── resource/
+│           │   ├── ResourceList.vue  # 资源列表
+│           │   ├── ResourceDetail.vue # 资源详情
+│           │   ├── ResourceUpload.vue # 上传资源
+│           │   ├── ResourceAudit.vue  # 资源审核
+│           │   └── MyResource.vue     # 我的资源
+│           ├── user/
+│           │   ├── UserManage.vue    # 用户管理
+│           │   └── UserProfile.vue   # 个人中心
+│           ├── question/
+│           │   ├── QuestionList.vue  # 问答列表
+│           │   └── QuestionDetail.vue # 问题详情
+│           ├── favorite/
+│           │   └── FavoriteList.vue  # 我的收藏
+│           ├── category/
+│           │   └── CategoryManage.vue # 分类管理
+│           └── statistics/
+│               └── Statistics.vue    # 数据统计
+│
+├── sql/                              # 数据库脚本
+│   ├── init.sql                      # 建库建表脚本
+│   ├── demo_data.sql                 # 演示数据
+│   ├── fix_names.sql                 # 修复用户姓名
+│   └── fix_users.sql                 # 修复用户密码
+│
+└── 部署启动文档.txt                   # 部署说明
+
+
+==============================================================================
+四、后端代码结构说明
+==============================================================================
+
+后端采用经典的三层架构：Controller → Service → Mapper
+
+1. Controller层（控制器）
+   负责接收HTTP请求，调用Service处理业务，返回统一格式的JSON响应。
+   所有接口以 /api 开头，使用 RESTful 风格。
+
+2. Service层（业务逻辑）
+   包含接口定义（service/）和实现类（service/impl/）。
+   核心业务逻辑在此处理，如密码加密、文件上传、权限校验等。
+
+3. Mapper层（数据访问）
+   使用 MyBatis-Plus 框架，简单的 CRUD 直接继承 BaseMapper。
+   复杂查询（如关联查询、统计查询）在 XML 映射文件中编写 SQL。
+
+4. 公共模块（common/）
+   - Result.java：统一响应格式 {code, message, data}
+   - JwtUtils.java：JWT令牌的生成、解析、验证
+   - GlobalExceptionHandler.java：全局异常捕获，返回友好错误信息
+   - Constants.java：系统常量（角色名、审核状态等）
+
+5. 拦截器（interceptor/）
+   AuthInterceptor 在每个请求到达 Controller 前执行：
+   - 从请求头提取 JWT Token
+   - 验证 Token 有效性
+   - 解析出 userId 和 role 存入 request
+   - 公开接口（登录、注册、资源列表等）不需要 Token
+
+6. 配置类（config/）
+   - MinioConfig：读取 MinIO 连接配置，创建 MinioClient Bean
+   - RedisConfig：配置 Redis 序列化方式为 JSON
+   - MybatisPlusConfig：注册分页插件
+   - WebMvcConfig：注册认证拦截器，配置排除路径
+
+
+==============================================================================
+五、前端代码结构说明
+==============================================================================
+
+前端采用 Vue.js 2 + Element UI 的单页面应用架构。
+
+1. API层（api/）
+   每个模块一个文件，封装了所有后端接口调用。
+   使用 Axios 发送请求，自动携带 JWT Token。
+
+2. 路由（router/index.js）
+   定义了所有页面路由，通过 meta 字段控制权限：
+   - requireAuth: true  需要登录
+   - roles: ['ADMIN']   限制角色访问
+   路由守卫在跳转前检查登录状态和角色权限。
+
+3. 状态管理（store/index.js）
+   使用 Vuex 管理全局状态：token、userId、username、role 等。
+   数据同时存储在 localStorage 中实现持久化。
+
+4. 请求封装（utils/request.js）
+   - 请求拦截器：自动在 Header 中添加 Authorization: Bearer <token>
+   - 响应拦截器：统一处理错误码，401 自动跳转登录页
+
+5. 页面组件（views/）
+   - Home.vue：根据角色显示不同首页（管理员控制台/教师工作台/学生门户）
+   - Layout.vue：页面布局框架，管理员和教师用侧边栏，学生用顶部导航
+   - 各功能页面均调用真实API，无任何假数据
+
+
+==============================================================================
+六、数据库设计说明
+==============================================================================
+
+数据库名：teaching_platform
+字符集：utf8mb4
+共 9 张表：
+
+1. sys_user（用户表）
+   存储所有用户信息，role 字段区分角色（STUDENT/TEACHER/ADMIN）
+   密码使用 BCrypt 加密存储
+
+2. resource_category（资源分类表）
+   支持树形结构（parent_id 自关联），预设5个分类
+
+3. teaching_resource（教学资源表）
+   核心表，存储资源元数据，文件实体存储在 MinIO 中
+   status 字段：0=待审核，1=已通过，2=已拒绝
+
+4. resource_comment（资源评论表）
+   支持层级评论（parent_id 自关联）
+
+5. resource_favorite（资源收藏表）
+   resource_id + user_id 联合唯一索引防止重复收藏
+
+6. question_answer（问答表）
+   可选关联资源（resource_id 可为空）
+
+7. qa_reply（问答回复表）
+   关联问题和回复用户
+
+8. resource_view_log（浏览记录表）
+   记录每次浏览行为，用于统计分析
+
+9. resource_download_log（下载记录表）
+   记录每次下载行为，用于统计分析
+
+
+==============================================================================
+七、核心功能模块说明
+==============================================================================
+
+1. 认证模块
+   - 注册：前端校验 → 后端检查用户名唯一 → BCrypt加密密码 → 入库
+   - 登录：查询用户 → BCrypt验证密码 → 检查状态 → 生成JWT → 返回Token
+   - 鉴权：拦截器解析Token → 提取userId和role → 存入request
+
+2. 资源管理模块
+   - 上传：前端FormData → 后端接收文件 → MinIO存储 → 元数据入库（待审核）
+   - 审核：管理员修改status字段 → 清除Redis缓存
+   - 下载：记录下载日志 → 更新下载计数 → 生成MinIO预签名URL → 返回
+   - 详情：优先从Redis读取 → 未命中则查数据库并写入Redis
+
+3. 互动模块
+   - 评论：支持层级结构，查询时组装父子关系
+   - 收藏：联合唯一索引防重复，支持收藏/取消收藏切换
+   - 问答：支持提问、回复、标记已解决
+
+4. 统计模块
+   - 仪表盘：COUNT查询各表总数
+   - 趋势图：按日期GROUP BY统计浏览/下载记录
+   - 分类分布：关联查询按分类名GROUP BY
+   - TOP排行：按下载量DESC排序取前N条
+   所有数据均为SQL实时查询，随用户操作实时变化
+
+
+==============================================================================
+八、接口清单
+==============================================================================
+
+认证模块：
+  POST   /api/auth/login              用户登录
+  POST   /api/auth/register           用户注册
+
+用户模块：
+  GET    /api/user/page               用户分页列表（管理员）
+  GET    /api/user/info               获取当前用户信息
+  GET    /api/user/{id}               根据ID获取用户
+  PUT    /api/user/update             更新个人信息
+  PUT    /api/user/password           修改密码
+  PUT    /api/user/status/{id}        启用/禁用用户（管理员）
+  PUT    /api/user/resetPassword/{id} 重置密码（管理员）
+  DELETE /api/user/{id}               删除用户（管理员）
+
+资源模块：
+  GET    /api/resource/list           资源分页列表
+  GET    /api/resource/detail/{id}    资源详情
+  POST   /api/resource/upload         上传资源
+  PUT    /api/resource/update         更新资源信息
+  DELETE /api/resource/{id}           删除资源
+  PUT    /api/resource/audit/{id}     审核资源
+  GET    /api/resource/download/{id}  下载资源
+  POST   /api/resource/view/{id}      记录浏览
+
+分类模块：
+  GET    /api/resource/category/list  分类列表
+  POST   /api/resource/category       新增分类
+  PUT    /api/resource/category       更新分类
+  DELETE /api/resource/category/{id}  删除分类
+
+评论模块：
+  GET    /api/comment/list/{resourceId}  评论列表
+  POST   /api/comment                    发表评论
+  DELETE /api/comment/{id}               删除评论
+
+收藏模块：
+  POST   /api/favorite/{resourceId}      添加收藏
+  DELETE /api/favorite/{resourceId}      取消收藏
+  GET    /api/favorite/check/{resourceId} 检查是否已收藏
+  GET    /api/favorite/list              我的收藏列表
+
+问答模块：
+  GET    /api/question/list              问题分页列表
+  GET    /api/question/detail/{id}       问题详情
+  POST   /api/question                   发布问题
+  PUT    /api/question                   更新问题
+  DELETE /api/question/{id}              删除问题
+  PUT    /api/question/solve/{id}        标记已解决
+  GET    /api/question/reply/list/{qid}  回复列表
+  POST   /api/question/reply             发表回复
+  DELETE /api/question/reply/{id}        删除回复
+
+统计模块：
+  GET    /api/statistics/dashboard       仪表盘概览数据
+  GET    /api/statistics/views           浏览趋势（参数：days）
+  GET    /api/statistics/downloads       下载趋势（参数：days）
+  GET    /api/statistics/category        分类浏览分布
+  GET    /api/statistics/top             热门资源排行（参数：limit）
+
+
+==============================================================================
+九、配置文件说明
+==============================================================================
+
+后端配置文件：backend/src/main/resources/application.yml
+
+  server.port: 8088                    # 后端端口
+  spring.datasource.url               # MySQL连接地址
+  spring.datasource.username: root     # MySQL用户名
+  spring.datasource.password: root     # MySQL密码（按实际修改）
+  spring.redis.host: localhost         # Redis地址
+  spring.redis.port: 6379             # Redis端口
+  minio.endpoint: http://localhost:9000  # MinIO地址
+  minio.access-key: minioadmin        # MinIO账号
+  minio.secret-key: minioadmin        # MinIO密码
+  minio.bucket-name: teaching-platform # MinIO存储桶名
+  jwt.secret: TeachingPlatformSecretKey2024  # JWT密钥
+  jwt.expiration: 86400000            # JWT过期时间（24小时）
+
+前端配置文件：frontend/vue.config.js
+
+  devServer.port: 8080                # 前端端口
+  devServer.proxy./api.target         # 后端代理地址（http://localhost:8088）
+
+
+==============================================================================
+  文档结束
+==============================================================================
